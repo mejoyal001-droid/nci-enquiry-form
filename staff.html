@@ -89,8 +89,36 @@
 <!-- ================= JAVASCRIPT ================= -->
 <script type="module">
 alert("Staff page JS is running");
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    // 🔴 KEEP YOUR EXISTING CONFIG HERE (DO NOT CHANGE IT)
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const loginBtn = document.getElementById("loginBtn");
+  const errorBox = document.getElementById("loginError");
+
+  loginBtn.addEventListener("click", () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        window.location.href = "staff-dashboard.html";
+      })
+      .catch(err => {
+        errorBox.textContent = err.message;
+      });
+  });
+  </script>
 /* =====================================================
    ✅ YOUR FIREBASE CONFIG (ALREADY ADDED)
    ===========
+
 
 
