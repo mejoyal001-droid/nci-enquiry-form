@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Enquiry — Public</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:20px}
+    input,textarea,button{display:block;width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid #ddd}
+    .success{color:green}
+    .error{color:red}
+  </style>
+</head>
+<body>
+  <h1>Send an Enquiry</h1>
+  <p>Tell us your name, email and message.</p>
+  <input id="name" placeholder="Your name" />
+  <input id="email" placeholder="Your email" />
+  <textarea id="message" rows="5" placeholder="Your enquiry..."></textarea>
+  <button id="sendBtn">Send Enquiry</button>
+  <p id="feedback"></p>
+
+  <script type="module">
+    // --- FIREBASE CONFIG: REPLACE with your project's config ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
+      authDomain: "enquiries-project.firebaseapp.com",
+      projectId: "enquiries-project",
+      appId: "1:639581041538:web:154030f25bf806bdfa959b"
+    };
+    // --- Firebase v9 modular imports via CDN ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const enquiriesCol = collection(db, "enquiries");
+
+    const nameEl = document.getElementById('name');
+    const emailEl = document.getElementById('email');
+    const messageEl = document.getElementById('message');
+    const sendBtn = document.getElementById('sendBtn');
+    const feedback = document.getElementById('feedback');
+
+    sendBtn.onclick = async () => {
+      feedback.textContent = '';
+      const name = nameEl.value.trim();
+      const email = emailEl.value.trim();
+      const msg = messageEl.value.trim();
+      if(!name || !email || !msg){
+        feedback.textContent = 'Please fill all fields.'; feedback.className = 'error'; return;
+      }
+      try{
+        await addDoc(enquiriesCol, {
+          name, email, message: msg,
+          status: "New",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          internalNotes: ''
+        });
+        nameEl.value=''; emailEl.value=''; messageEl.value='';
+        feedback.textContent = 'Enquiry sent — thank you!'; feedback.className='success';
+      } catch(e){
+        console.error(e);
+        feedback.textContent = 'Error sending enquiry.'; feedback.className='error';
+      }
+    };
+  </script>
+</body>
+</html>

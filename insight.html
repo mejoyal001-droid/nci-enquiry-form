@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Insights</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>body{font-family:sans-serif;max-width:800px;margin:30px auto;padding:20px}</style>
+</head>
+<body>
+  <h1>Operational Insights</h1>
+  <div>
+    <strong>Totals:</strong>
+    <div>New: <span id="count-new">0</span></div>
+    <div>In Progress: <span id="count-inprog">0</span></div>
+    <div>Resolved: <span id="count-resolved">0</span></div>
+    <div>Enquiries last 24 hours: <span id="count-24">0</span></div>
+  </div>
+
+  <script type="module">
+    const firebaseConfig = {
+      apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
+      authDomain: "enquiries-project.firebaseapp.com",
+      projectId: "enquiries-project",
+      appId: "1:639581041538:web:154030f25bf806bdfa959b"
+    };
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const enquiriesCol = collection(db, "enquiries");
+
+    const elNew = document.getElementById('count-new');
+    const elInProg = document.getElementById('count-inprog');
+    const elResolved = document.getElementById('count-resolved');
+    const el24 = document.getElementById('count-24');
+
+    onSnapshot(enquiriesCol, (snap) => {
+      let cNew=0,cIn=0,cRes=0,c24=0;
+      const now = Date.now();
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        if(d.status === 'New') cNew++;
+        if(d.status === 'In Progress') cIn++;
+        if(d.status === 'Resolved') cRes++;
+        // createdAt may be a timestamp object; handle both cases
+        const created = d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : (d.createdAt ? new Date(d.createdAt).getTime() : 0);
+        if(created && (now - created) <= 24*60*60*1000) c24++;
+      });
+      elNew.textContent = cNew;
+      elInProg.textContent = cIn;
+      elResolved.textContent = cRes;
+      el24.textContent = c24;
+    });
+  </script>
+</body>
+</html>
