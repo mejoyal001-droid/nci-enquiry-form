@@ -106,7 +106,7 @@ alert("Staff page JS is running");
   loginBtn.addEventListener("click", () => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
+console.log("Attempting login with:", email);
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
         window.location.href = "staff-dashboard.html";
@@ -119,6 +119,7 @@ alert("Staff page JS is running");
 /* =====================================================
    ✅ YOUR FIREBASE CONFIG (ALREADY ADDED)
    ===========
+
 
 
 
