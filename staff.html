@@ -12,80 +12,63 @@
       margin: auto;
       padding: 20px;
     }
-    input, button {
-      padding: 8px;
-      margin: 6px 0;
-      width: 100%;
-    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin-top: 15px;
     }
     th, td {
       border-bottom: 1px solid #ddd;
       padding: 8px;
+      text-align: left;
     }
     th {
       background: #f4f4f4;
     }
-    .login-box {
-      max-width: 400px;
-      margin: 30px auto;
-      padding: 20px;
-      border: 1px solid #ccc;
+    button {
+      padding: 6px 10px;
+      cursor: pointer;
     }
-    .credential-box {
-      background: #eef;
-      padding: 12px;
-      margin-bottom: 20px;
-      border: 1px solid #ccd;
+    .resolved {
+      color: green;
+      font-weight: bold;
+    }
+    .pending {
+      color: orange;
+      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
 
-<div class="credential-box">
-  <strong>Staff Login (for marking purposes)</strong><br>
-  Email: <code>stafflogin@test.com</code><br>
-  Password: <code>Staff12345</code>
-</div>
+<h1>Customer Enquiries – Staff Dashboard</h1>
+<button id="logoutBtn">Logout</button>
 
-<!-- LOGIN -->
-<div id="loginBox" class="login-box">
-  <h2>Staff Login</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button id="loginBtn" type="button">Login</button>
-  <p id="loginError" style="color:red;"></p>
-</div>
-
-<!-- STAFF DASHBOARD -->
-<div id="staffContent" style="display:none;">
-  <h1>Customer Enquiries – Staff Dashboard</h1>
-  <button id="logoutBtn">Logout</button>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Message</th>
-      </tr>
-    </thead>
-    <tbody id="enquiryTable"></tbody>
-  </table>
-</div>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Message</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="enquiryTable"></tbody>
+</table>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut }
-    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, onSnapshot }
-    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    onSnapshot,
+    updateDoc,
+    doc
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // FIREBASE CONFIG
   const firebaseConfig = {
     apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
     authDomain: "enquiries-project.firebaseapp.com",
@@ -99,47 +82,52 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const loginBox = document.getElementById("loginBox");
-  const staffContent = document.getElementById("staffContent");
   const tableBody = document.getElementById("enquiryTable");
-  const errorBox = document.getElementById("loginError");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-  document.getElementById("loginBtn").onclick = () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+  // 🔄 Load enquiries in real-time
+  onSnapshot(collection(db, "enquiries"), (snapshot) => {
+    tableBody.innerHTML = "";
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        loginBox.style.display = "none";
-        staffContent.style.display = "block";
-        loadEnquiries();
-      })
-      .catch(err => errorBox.textContent = err.message);
-  };
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const row = document.createElement("tr");
 
-  document.getElementById("logoutBtn").onclick = () => {
-    signOut(auth).then(() => {
-      staffContent.style.display = "none";
-      loginBox.style.display = "block";
+      row.innerHTML = `
+        <td>${data.name}</td>
+        <td>${data.email}</td>
+        <td>${data.message}</td>
+        <td class="${data.status === 'Resolved' ? 'resolved' : 'pending'}">
+          ${data.status || 'Pending'}
+        </td>
+        <td>
+          ${
+            data.status === "Resolved"
+              ? "✔ Done"
+              : `<button data-id="${docSnap.id}">Mark as Resolved</button>`
+          }
+        </td>
+      `;
+
+      tableBody.appendChild(row);
     });
-  };
 
-  function loadEnquiries() {
-    onSnapshot(collection(db, "enquiries"), snapshot => {
-      tableBody.innerHTML = "";
-
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${d.name}</td>
-          <td>${d.email}</td>
-          <td>${d.message}</td>
-        `;
-        tableBody.appendChild(row);
+    // Add click events to buttons
+    document.querySelectorAll("button[data-id]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const docId = btn.getAttribute("data-id");
+        await updateDoc(doc(db, "enquiries", docId), {
+          status: "Resolved"
+        });
       });
     });
-  }
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    signOut(auth).then(() => {
+      window.location.reload();
+    });
+  });
 </script>
 
 </body>
