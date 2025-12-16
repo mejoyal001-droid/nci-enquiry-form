@@ -12,9 +12,10 @@
       margin: auto;
       padding: 20px;
     }
-    input, select, button {
+    input, button {
       padding: 8px;
-      margin: 4px 0;
+      margin: 6px 0;
+      width: 100%;
     }
     table {
       width: 100%;
@@ -24,7 +25,6 @@
     th, td {
       border-bottom: 1px solid #ddd;
       padding: 8px;
-      text-align: left;
     }
     th {
       background: #f4f4f4;
@@ -41,85 +41,76 @@
       margin-bottom: 20px;
       border: 1px solid #ccd;
     }
-    .new {
-      background: #f9fff0;
-    }
   </style>
 </head>
 
 <body>
 
-<!-- ================= STAFF CREDENTIALS (FOR MARKERS) ================= -->
 <div class="credential-box">
   <strong>Staff Login (for marking purposes)</strong><br>
   Email: <code>stafflogin@test.com</code><br>
   Password: <code>Staff12345</code>
 </div>
 
-<!-- ================= LOGIN FORM ================= -->
 <div id="loginBox" class="login-box">
   <h2>Staff Login</h2>
-  <input type="email" id="email" placeholder="Email" required><br>
-  <input type="password" id="password" placeholder="Password" required><br>
-  <button id="loginBtn" type="button">Login</button>
-
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button id="loginBtn">Login</button>
   <p id="loginError" style="color:red;"></p>
 </div>
 
-<!-- ================= STAFF DASHBOARD ================= -->
 <div id="staffContent" style="display:none;">
   <h1>Customer Enquiries – Staff Dashboard</h1>
   <button id="logoutBtn">Logout</button>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Message</th>
-        <th>Status</th>
-        <th>Internal Notes</th>
-        <th>Save</th>
-      </tr>
-    </thead>
-    <tbody id="enquiryTable"></tbody>
-  </table>
+  <p>✅ Login successful. Dashboard loaded.</p>
 </div>
 
-<!-- ================= JAVASCRIPT ================= -->
 <script type="module">
-alert("Staff page JS is running");
-
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, signOut } 
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+  // 🔥 CORRECT FIREBASE CONFIG (YOURS)
   const firebaseConfig = {
-    // 🔴 KEEP YOUR EXISTING CONFIG HERE (DO NOT CHANGE IT)
+    apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
+    authDomain: "enquiries-project.firebaseapp.com",
+    projectId: "enquiries-project",
+    storageBucket: "enquiries-project.firebasestorage.app",
+    messagingSenderId: "639581041538",
+    appId: "1:639581041538:web:154030f25bf806bdfa959b"
   };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
   const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const loginBox = document.getElementById("loginBox");
+  const staffContent = document.getElementById("staffContent");
   const errorBox = document.getElementById("loginError");
 
   loginBtn.addEventListener("click", () => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-console.log("Attempting login with:", email);
+
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        window.location.href = "staff-dashboard.html";
+        loginBox.style.display = "none";
+        staffContent.style.display = "block";
       })
       .catch(err => {
         errorBox.textContent = err.message;
       });
   });
-  </script>
-/* =====================================================
-   ✅ YOUR FIREBASE CONFIG (ALREADY ADDED)
-   ===========
 
+  logoutBtn.addEventListener("click", () => {
+    signOut(auth).then(() => {
+      staffContent.style.display = "none";
+      loginBox.style.display = "block";
+    });
+  });
+</script>
 
-
-
+</body>
+</html>
