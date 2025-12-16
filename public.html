@@ -1,70 +1,163 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Enquiry — Public</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>Staff Dashboard – Customer Enquiries</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:20px}
-    input,textarea,button{display:block;width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid #ddd}
-    .success{color:green}
-    .error{color:red}
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+    input, button {
+      padding: 8px;
+      margin: 6px 0;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f4;
+    }
+    .login-box {
+      max-width: 400px;
+      margin: 30px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+    }
+    .credential-box {
+      background: #eef;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccd;
+    }
   </style>
 </head>
+
 <body>
-  <h1>Send an Enquiry</h1>
-  <p>Tell us your name, email and message.</p>
-  <input id="name" placeholder="Your name" />
-  <input id="email" placeholder="Your email" />
-  <textarea id="message" rows="5" placeholder="Your enquiry..."></textarea>
-  <button id="sendBtn">Send Enquiry</button>
-  <p id="feedback"></p>
 
-  <script type="module">
-    // --- FIREBASE CONFIG: REPLACE with your project's config ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
-      authDomain: "enquiries-project.firebaseapp.com",
-      projectId: "enquiries-project",
-      appId: "1:639581041538:web:154030f25bf806bdfa959b"
-    };
-    // --- Firebase v9 modular imports via CDN ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+<!-- ================= STAFF CREDENTIALS ================= -->
+<div class="credential-box">
+  <strong>Staff Login (for marking purposes)</strong><br>
+  Email: <code>stafflogin@test.com</code><br>
+  Password: <code>Staff12345</code>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const enquiriesCol = collection(db, "enquiries");
+<!-- ================= LOGIN ================= -->
+<div id="loginBox" class="login-box">
+  <h2>Staff Login</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button id="loginBtn" type="button">Login</button>
+  <p id="loginError" style="color:red;"></p>
+</div>
 
-    const nameEl = document.getElementById('name');
-    const emailEl = document.getElementById('email');
-    const messageEl = document.getElementById('message');
-    const sendBtn = document.getElementById('sendBtn');
-    const feedback = document.getElementById('feedback');
+<!-- ================= STAFF DASHBOARD ================= -->
+<div id="staffContent" style="display:none;">
+  <h1>Customer Enquiries – Staff Dashboard</h1>
+  <button id="logoutBtn">Logout</button>
 
-    sendBtn.onclick = async () => {
-      feedback.textContent = '';
-      const name = nameEl.value.trim();
-      const email = emailEl.value.trim();
-      const msg = messageEl.value.trim();
-      if(!name || !email || !msg){
-        feedback.textContent = 'Please fill all fields.'; feedback.className = 'error'; return;
-      }
-      try{
-        await addDoc(enquiriesCol, {
-          name, email, message: msg,
-          status: "New",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          internalNotes: ''
-        });
-        nameEl.value=''; emailEl.value=''; messageEl.value='';
-        feedback.textContent = 'Enquiry sent — thank you!'; feedback.className='success';
-      } catch(e){
-        console.error(e);
-        feedback.textContent = 'Error sending enquiry.'; feedback.className='error';
-      }
-    };
-  </script>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody id="enquiryTable"></tbody>
+  </table>
+</div>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script type="module">
+
+/* ========= IMPORTS ========= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* ========= FIREBASE CONFIG ========= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
+  authDomain: "enquiries-project.firebaseapp.com",
+  projectId: "enquiries-project",
+  storageBucket: "enquiries-project.firebasestorage.app",
+  messagingSenderId: "639581041538",
+  appId: "1:639581041538:web:154030f25bf806bdfa959b"
+};
+
+/* ========= INITIALISE ========= */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ========= ELEMENTS ========= */
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const loginBox = document.getElementById("loginBox");
+const staffContent = document.getElementById("staffContent");
+const errorBox = document.getElementById("loginError");
+const tableBody = document.getElementById("enquiryTable");
+
+/* ========= LOGIN ========= */
+loginBtn.addEventListener("click", () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      loginBox.style.display = "none";
+      staffContent.style.display = "block";
+      loadEnquiries();
+    })
+    .catch(error => {
+      errorBox.textContent = error.message;
+    });
+});
+
+/* ========= LOGOUT ========= */
+logoutBtn.addEventListener("click", () => {
+  signOut(auth).then(() => {
+    staffContent.style.display = "none";
+    loginBox.style.display = "block";
+  });
+});
+
+/* ========= LOAD ENQUIRIES ========= */
+function loadEnquiries() {
+  onSnapshot(collection(db, "enquiries"), (snapshot) => {
+    tableBody.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${data.name}</td>
+        <td>${data.email}</td>
+        <td>${data.message}</td>
+      `;
+
+      tableBody.appendChild(row);
+    });
+  });
+}
+
+</script>
+
 </body>
 </html>
