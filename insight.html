@@ -1,19 +1,117 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Insights</title>
+  <title>Interior Co. — Insights</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>body{font-family:sans-serif;max-width:800px;margin:30px auto;padding:20px}</style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0f1116;
+      --panel: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.14);
+      --text: #f4f4f4;
+      --muted: #a8a8a8;
+      --accent: #c9a76d;
+      --success: #7ad97a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", sans-serif;
+      background: radial-gradient(circle at top left, #1b1f2a, #0f1116);
+      color: var(--text);
+      padding: 50px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      margin: 0 0 30px;
+      font-weight: 500;
+      font-size: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+    }
+
+    .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-size: 32px;
+      font-weight: 500;
+    }
+
+    .accent {
+      color: var(--accent);
+    }
+
+    .success {
+      color: var(--success);
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Operational Insights</h1>
-  <div>
-    <strong>Totals:</strong>
-    <div>New: <span id="count-new">0</span></div>
-    <div>In Progress: <span id="count-inprog">0</span></div>
-    <div>Resolved: <span id="count-resolved">0</span></div>
-    <div>Enquiries last 24 hours: <span id="count-24">0</span></div>
+
+  <div class="container">
+    <h1>Operational Insights</h1>
+
+    <div class="grid">
+      <div class="card">
+        <div class="label">New enquiries</div>
+        <div class="value accent" id="count-new">0</div>
+      </div>
+
+      <div class="card">
+        <div class="label">In progress</div>
+        <div class="value" id="count-inprog">0</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Resolved</div>
+        <div class="value success" id="count-resolved">0</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Last 24 hours</div>
+        <div class="value" id="count-24">0</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Live data — updates automatically as enquiries change.
+    </div>
   </div>
 
   <script type="module">
@@ -23,35 +121,47 @@
       projectId: "enquiries-project",
       appId: "1:639581041538:web:154030f25bf806bdfa959b"
     };
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot }
+      from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const enquiriesCol = collection(db, "enquiries");
 
-    const elNew = document.getElementById('count-new');
-    const elInProg = document.getElementById('count-inprog');
-    const elResolved = document.getElementById('count-resolved');
-    const el24 = document.getElementById('count-24');
+    const elNew = document.getElementById("count-new");
+    const elInProg = document.getElementById("count-inprog");
+    const elResolved = document.getElementById("count-resolved");
+    const el24 = document.getElementById("count-24");
 
     onSnapshot(enquiriesCol, (snap) => {
-      let cNew=0,cIn=0,cRes=0,c24=0;
+      let cNew = 0, cIn = 0, cRes = 0, c24 = 0;
       const now = Date.now();
+
       snap.forEach(docSnap => {
         const d = docSnap.data();
-        if(d.status === 'New') cNew++;
-        if(d.status === 'In Progress') cIn++;
-        if(d.status === 'Resolved') cRes++;
-        // createdAt may be a timestamp object; handle both cases
-        const created = d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : (d.createdAt ? new Date(d.createdAt).getTime() : 0);
-        if(created && (now - created) <= 24*60*60*1000) c24++;
+
+        if (d.status === "New") cNew++;
+        if (d.status === "In Progress") cIn++;
+        if (d.status === "Resolved") cRes++;
+
+        const created =
+          d.createdAt && d.createdAt.toMillis
+            ? d.createdAt.toMillis()
+            : d.createdAt
+              ? new Date(d.createdAt).getTime()
+              : 0;
+
+        if (created && now - created <= 24 * 60 * 60 * 1000) c24++;
       });
+
       elNew.textContent = cNew;
       elInProg.textContent = cIn;
       elResolved.textContent = cRes;
       el24.textContent = c24;
     });
   </script>
+
 </body>
 </html>
