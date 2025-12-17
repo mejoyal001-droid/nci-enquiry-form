@@ -2,88 +2,176 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Staff Dashboard – Customer Enquiries</title>
+  <title>Interior Co. – Staff Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1100px;
-      margin: auto;
-      padding: 20px;
+    :root {
+      --bg: #0f1116;
+      --panel: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.14);
+      --accent: #c9a76d;
+      --text: #f4f4f4;
+      --muted: #a8a8a8;
+      --success: #7ad97a;
+      --pending: #f0c36d;
     }
 
-    .hidden {
-      display: none;
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: radial-gradient(circle at top left, #1b1f2a, #0f1116);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .hidden { display: none; }
+
+    /* ---------- LOGIN ---------- */
+
+    #loginBox {
+      max-width: 420px;
+      margin: 80px auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 42px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+    }
+
+    #loginBox h2 {
+      margin: 0 0 8px;
+      font-weight: 500;
+      font-size: 26px;
+    }
+
+    #loginBox p {
+      margin: 0 0 28px;
+      font-size: 14px;
+      color: var(--muted);
     }
 
     input {
-      display: block;
-      margin-bottom: 10px;
-      padding: 8px;
-      width: 250px;
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
     }
 
     button {
-      padding: 6px 12px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #d6b37a, #b8965f);
+      color: #111;
+      font-weight: 500;
       cursor: pointer;
+    }
+
+    #error {
+      color: #ff6b6b;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    /* ---------- DASHBOARD ---------- */
+
+    #dashboard {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .topbar h1 {
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .topbar button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
     }
 
     th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 8px;
+      padding: 16px;
       text-align: left;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
       vertical-align: top;
-      word-break: break-word;
     }
 
     th {
-      background: #f4f4f4;
+      font-weight: 500;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
     }
 
-    .resolved {
-      color: green;
-      font-weight: bold;
+    tr:last-child td {
+      border-bottom: none;
     }
 
-    .pending {
-      color: orange;
-      font-weight: bold;
+    .resolved { color: var(--success); font-weight: 500; }
+    .pending { color: var(--pending); font-weight: 500; }
+
+    td button {
+      background: #2b2f3a;
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 8px;
     }
 
-    #loginBox {
-      margin-top: 60px;
-      max-width: 300px;
-    }
-
-    #error {
-      color: red;
-      margin-top: 10px;
+    td button:hover {
+      background: #363b48;
     }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN VIEW -->
+<!-- LOGIN -->
 <div id="loginBox" class="hidden">
-  <h2>Staff Login</h2>
+  <h2>Interior Co.</h2>
+  <p>Staff access — customer enquiries</p>
   <input type="email" id="email" placeholder="Email" />
   <input type="password" id="password" placeholder="Password" />
-  <button id="loginBtn">Login</button>
+  <button id="loginBtn">Sign in</button>
   <div id="error"></div>
 </div>
 
-<!-- DASHBOARD VIEW -->
+<!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
-  <h1>Customer Enquiries – Staff Dashboard</h1>
-  <button id="logoutBtn">Logout</button>
+  <div class="topbar">
+    <h1>Customer Enquiries</h1>
+    <button id="logoutBtn">Logout</button>
+  </div>
 
   <table>
     <thead>
@@ -101,19 +189,10 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import {
-    getFirestore,
-    collection,
-    onSnapshot,
-    updateDoc,
-    doc
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, onSnapshot, updateDoc, doc }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
@@ -130,105 +209,65 @@
 
   const loginBox = document.getElementById("loginBox");
   const dashboard = document.getElementById("dashboard");
-  const loginBtn = document.getElementById("loginBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
   const errorBox = document.getElementById("error");
   const tableBody = document.getElementById("enquiryTable");
 
-  let unsubscribeEnquiries = null;
+  let unsubscribe = null;
 
-  // 🔐 AUTH STATE CONTROL (THIS IS THE KEY PART)
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, user => {
     if (user) {
       loginBox.classList.add("hidden");
       dashboard.classList.remove("hidden");
-      startEnquiryListener();
+      startListener();
     } else {
       dashboard.classList.add("hidden");
       loginBox.classList.remove("hidden");
       tableBody.innerHTML = "";
-      if (unsubscribeEnquiries) unsubscribeEnquiries();
+      if (unsubscribe) unsubscribe();
     }
   });
 
-  // 🔑 LOGIN
-  loginBtn.addEventListener("click", async () => {
+  document.getElementById("loginBtn").onclick = async () => {
     errorBox.textContent = "";
-
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    if (!email || !password) {
-      errorBox.textContent = "Email and password required.";
-      return;
-    }
-
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      errorBox.textContent = err.message;
+      await signInWithEmailAndPassword(
+        auth,
+        email.value.trim(),
+        password.value.trim()
+      );
+    } catch (e) {
+      errorBox.textContent = e.message;
     }
-  });
+  };
 
-  // 🚪 LOGOUT
-  logoutBtn.addEventListener("click", async () => {
-    await signOut(auth);
-  });
+  document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-  // 📡 FIRESTORE LISTENER
-  function startEnquiryListener() {
-    unsubscribeEnquiries = onSnapshot(collection(db, "enquiries"), (snapshot) => {
+  function startListener() {
+    unsubscribe = onSnapshot(collection(db, "enquiries"), snap => {
       tableBody.innerHTML = "";
-
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const status = data.status || "Pending";
-        const resolved = status === "Resolved";
-
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${escapeHtml(data.name ?? "")}</td>
-          <td>${escapeHtml(data.email ?? "")}</td>
-          <td>${escapeHtml(data.message ?? "")}</td>
-          <td class="${resolved ? "resolved" : "pending"}">${status}</td>
-          <td>
-            ${
-              resolved
-                ? "✔ Done"
-                : `<button data-id="${docSnap.id}">Mark as Resolved</button>`
-            }
-          </td>
-        `;
-        tableBody.appendChild(row);
+      snap.forEach(d => {
+        const e = d.data();
+        const status = e.status || "Pending";
+        tableBody.innerHTML += `
+          <tr>
+            <td>${escapeHtml(e.name)}</td>
+            <td>${escapeHtml(e.email)}</td>
+            <td>${escapeHtml(e.message)}</td>
+            <td class="${status === "Resolved" ? "resolved" : "pending"}">${status}</td>
+            <td>${status === "Resolved" ? "✔ Done" : `<button data-id="${d.id}">Resolve</button>`}</td>
+          </tr>`;
       });
     });
   }
 
-  // 🖱 ACTION BUTTONS
-  tableBody.addEventListener("click", async (e) => {
+  tableBody.onclick = async e => {
     const btn = e.target.closest("button[data-id]");
     if (!btn) return;
+    await updateDoc(doc(db, "enquiries", btn.dataset.id), { status: "Resolved" });
+  };
 
-    const docId = btn.dataset.id;
-    btn.disabled = true;
-
-    try {
-      await updateDoc(doc(db, "enquiries", docId), { status: "Resolved" });
-    } catch (err) {
-      alert("Failed to update. Check permissions.");
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
+  const escapeHtml = s =>
+    String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 </script>
 
 </body>
