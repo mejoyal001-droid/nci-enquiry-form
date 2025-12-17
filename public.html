@@ -2,69 +2,183 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Enquiry — Public</title>
+  <title>Interior Co. — Enquiry</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
-    body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:20px}
-    input,textarea,button{display:block;width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid #ddd}
-    .success{color:green}
-    .error{color:red}
+    :root {
+      --bg: #0f1116;
+      --panel: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.14);
+      --accent: #c9a76d;
+      --text: #f4f4f4;
+      --muted: #a8a8a8;
+      --success: #7ad97a;
+      --error: #ff6b6b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", sans-serif;
+      background: radial-gradient(circle at top left, #1b1f2a, #0f1116);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 46px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-weight: 500;
+      font-size: 28px;
+    }
+
+    p {
+      margin: 0 0 28px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    textarea {
+      min-height: 120px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #888;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #d6b37a, #b8965f);
+      color: #111;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    #feedback {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .success {
+      color: var(--success);
+    }
+
+    .error {
+      color: var(--error);
+    }
   </style>
 </head>
+
 <body>
-  <h1>Send an Enquiry</h1>
-  <p>Tell us your name, email and message.</p>
-  <input id="name" placeholder="Your name" />
-  <input id="email" placeholder="Your email" />
-  <textarea id="message" rows="5" placeholder="Your enquiry..."></textarea>
-  <button id="sendBtn">Send Enquiry</button>
-  <p id="feedback"></p>
+
+  <div class="card">
+    <h1>Interior Co.</h1>
+    <p>Tell us about your project and we’ll get back to you shortly.</p>
+
+    <input id="name" placeholder="Your name" />
+    <input id="email" placeholder="Your email" />
+    <textarea id="message" placeholder="Your enquiry..."></textarea>
+    <button id="sendBtn">Send enquiry</button>
+
+    <p id="feedback"></p>
+  </div>
 
   <script type="module">
-    // --- FIREBASE CONFIG: REPLACE with your project's config ---
     const firebaseConfig = {
       apiKey: "AIzaSyBh8ICNyaPQvOMTmlP5LeyrQBa1HJhTeo4",
       authDomain: "enquiries-project.firebaseapp.com",
       projectId: "enquiries-project",
       appId: "1:639581041538:web:154030f25bf806bdfa959b"
     };
-    // --- Firebase v9 modular imports via CDN ---
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const enquiriesCol = collection(db, "enquiries");
 
-    const nameEl = document.getElementById('name');
-    const emailEl = document.getElementById('email');
-    const messageEl = document.getElementById('message');
-    const sendBtn = document.getElementById('sendBtn');
-    const feedback = document.getElementById('feedback');
+    const nameEl = document.getElementById("name");
+    const emailEl = document.getElementById("email");
+    const messageEl = document.getElementById("message");
+    const sendBtn = document.getElementById("sendBtn");
+    const feedback = document.getElementById("feedback");
 
     sendBtn.onclick = async () => {
-      feedback.textContent = '';
+      feedback.textContent = "";
       const name = nameEl.value.trim();
       const email = emailEl.value.trim();
       const msg = messageEl.value.trim();
-      if(!name || !email || !msg){
-        feedback.textContent = 'Please fill all fields.'; feedback.className = 'error'; return;
+
+      if (!name || !email || !msg) {
+        feedback.textContent = "Please fill all fields.";
+        feedback.className = "error";
+        return;
       }
-      try{
+
+      try {
         await addDoc(enquiriesCol, {
-          name, email, message: msg,
+          name,
+          email,
+          message: msg,
           status: "New",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          internalNotes: ''
+          internalNotes: ""
         });
-        nameEl.value=''; emailEl.value=''; messageEl.value='';
-        feedback.textContent = 'Enquiry sent — thank you!'; feedback.className='success';
-      } catch(e){
+
+        nameEl.value = "";
+        emailEl.value = "";
+        messageEl.value = "";
+        feedback.textContent = "Enquiry sent — thank you!";
+        feedback.className = "success";
+      } catch (e) {
         console.error(e);
-        feedback.textContent = 'Error sending enquiry.'; feedback.className='error';
+        feedback.textContent = "Error sending enquiry.";
+        feedback.className = "error";
       }
     };
   </script>
+
 </body>
 </html>
